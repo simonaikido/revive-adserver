@@ -81,7 +81,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
             return $item;
         }, self::DATA);
 
-        $this->oDal->start(3, 1, dryRun: true);
+        $this->oDal->start(1, 2, dryRun: true);
 
         $this->assertEqual(explode(PHP_EOL, trim($this->oOutput->fetch())), [
             'Condensed 2 records from data_summary_ad_hourly into 1 monthly aggregates for 2025-01',
@@ -101,14 +101,14 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
         $this->assertEqual($aResult, $aExpect);
     }
 
-    public function test_condense_0_0(): void
+    public function test_condense_null_null(): void
     {
         $aExpect = array_map(static function (array $item) {
             $item[] = '1';
             return $item;
         }, self::DATA);
 
-        $this->oDal->start(0, 0);
+        $this->oDal->start(null, null);
 
         $aResult = $this->oDbh->queryAll('SELECT date_time, ad_id, impressions FROM oa_data_intermediate_ad ORDER BY date_time, ad_id', fetchmode: MDB2_FETCHMODE_ORDERED);
 
@@ -119,7 +119,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
         $this->assertEqual($aResult, $aExpect);
     }
 
-    public function test_condense_0_6(): void
+    public function test_condense_5_null(): void
     {
         $aExpect = [
             ['2025-01-01 00:00:00', '3', '1'],
@@ -142,7 +142,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
             ['2026-03-27 14:00:00', '1', '1'],
         ];
 
-        $this->oDal->start(0, 6);
+        $this->oDal->start(5, null);
 
         $aResult = $this->oDbh->queryAll('SELECT date_time, ad_id, impressions FROM oa_data_intermediate_ad ORDER BY date_time, ad_id', fetchmode: MDB2_FETCHMODE_ORDERED);
 
@@ -153,7 +153,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
         $this->assertEqual($aResult, $aExpect);
     }
 
-    public function test_condense_6_0(): void
+    public function test_condense_null_5(): void
     {
         $aExpect = [
             ['2025-01-01 00:00:00', '3', '2'],
@@ -172,7 +172,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
             ['2026-03-27 14:00:00', '1', '1'],
         ];
 
-        $this->oDal->start(6, 0);
+        $this->oDal->start(null, 5);
 
         $aResult = $this->oDbh->queryAll('SELECT date_time, ad_id, impressions FROM oa_data_intermediate_ad ORDER BY date_time, ad_id', fetchmode: MDB2_FETCHMODE_ORDERED);
 
@@ -183,7 +183,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
         $this->assertEqual($aResult, $aExpect);
     }
 
-    public function test_condense_3_1(): void
+    public function test_condense_0_2(): void
     {
         $aExpect = [
             ['2025-01-01 00:00:00', '3', '2'],
@@ -199,7 +199,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
             ['2026-03-27 14:00:00', '1', '1'],
         ];
 
-        $this->oDal->start(3, 1);
+        $this->oDal->start(0, 2);
 
         $aResult = $this->oDbh->queryAll('SELECT date_time, ad_id, impressions FROM oa_data_intermediate_ad ORDER BY date_time, ad_id', fetchmode: MDB2_FETCHMODE_ORDERED);
 
@@ -210,7 +210,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
         $this->assertEqual($aResult, $aExpect);
     }
 
-    public function test_condense_3_1_batches(): void
+    public function test_condense_0_2_batches(): void
     {
         $aExpect = [
             ['2025-01-01 00:00:00', '3', '2'],
@@ -233,7 +233,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
             ['2026-03-27 14:00:00', '1', '1'],
         ];
 
-        $this->oDal->start(3, 1, batches: 1);
+        $this->oDal->start(0, 2, batches: 1);
 
         $aResult = $this->oDbh->queryAll('SELECT date_time, ad_id, impressions FROM oa_data_intermediate_ad ORDER BY date_time, ad_id', fetchmode: MDB2_FETCHMODE_ORDERED);
 
@@ -244,7 +244,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
         $this->assertEqual($aResult, $aExpect);
     }
 
-    public function test_condense_0_1_batches(): void
+    public function test_condense_0_null_batches(): void
     {
         $aExpect = [
             ['2025-01-01 00:00:00', '3', '1'],
@@ -267,7 +267,7 @@ class Test_Rv_Dal_Statistics_Condense extends \UnitTestCase
             ['2026-03-27 14:00:00', '1', '1'],
         ];
 
-        $this->oDal->start(0, 1, batches: 2);
+        $this->oDal->start(0, null, batches: 2);
 
         $aResult = $this->oDbh->queryAll('SELECT date_time, ad_id, impressions FROM oa_data_intermediate_ad ORDER BY date_time, ad_id', fetchmode: MDB2_FETCHMODE_ORDERED);
 

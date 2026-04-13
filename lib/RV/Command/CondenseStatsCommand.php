@@ -19,9 +19,9 @@ class CondenseStatsCommand extends AbstractReviveCommand
         $this
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Do not request permission to proceed')
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Dry-run operation')
-            ->addOption('daily-range', 'd', InputOption::VALUE_REQUIRED, 'Number of months to keep before condensing to daily', '12')
-            ->addOption('monthly-range', 'm', InputOption::VALUE_REQUIRED, 'Number of months to keep before condensing to monthly (0 to disable)', '36')
-            ->addOption('batches', 'b', InputOption::VALUE_REQUIRED, 'Number of batches to process (0 for unlimited)', 0)
+            ->addOption('daily-range', 'd', InputOption::VALUE_REQUIRED, 'Number of full months to keep before condensing to daily')
+            ->addOption('monthly-range', 'm', InputOption::VALUE_REQUIRED, 'Number of full months to keep before condensing to monthly')
+            ->addOption('batches', 'b', InputOption::VALUE_REQUIRED, 'Number of batches to process')
         ;
     }
 
@@ -32,12 +32,16 @@ class CondenseStatsCommand extends AbstractReviveCommand
         require_once MAX_PATH . '/lib/OA/DB.php';
         require_once MAX_PATH . '/lib/OA/Permission.php';
 
-        $monthly = (int) $input->getOption('monthly-range');
-        $daily = (int) $input->getOption('daily-range');
-        $batches = (int) $input->getOption('batches');
+        $daily = $this->parseIntInput($input, 'daily-range', 0);
+        $monthly = $this->parseIntInput($input, 'monthly-range', 0);
+        $batches = $this->parseIntInput($input, 'batches', 1);
         $dryRun = (bool) $input->getOption('dry-run');
 
-        $message = "Monthly: {$monthly} - Daily: {$daily}";
+        $message = sprintf(
+            "Daily: %s - Monthly: %s",
+            $daily ?? '<error>disabled</error>',
+            $monthly ?? '<error>disabled</error>',
+        );
 
         if ($batches > 0) {
             $message .= " - Batches: {$batches}";
@@ -47,16 +51,41 @@ class CondenseStatsCommand extends AbstractReviveCommand
             $message .= " <error>(DRY-RUN)</error>";
         }
 
-        $output->writeln("<info>{$message}</info>", OutputInterface::VERBOSITY_VERBOSE);
+        $output->writeln("<info>{$message}</info>");
+
+        if (null === $daily && null === $monthly) {
+            return self::INVALID;
+        }
 
         if (!$this->askQuestion($input, $output, 'Are you sure you want to proceed?')) {
             return self::INVALID;
         }
 
         $condense = new Condense(new SymfonyStyle($input, $output));
-        $condense->start($monthly, $daily, $batches, $dryRun);
+        $condense->start($daily, $monthly, $batches, $dryRun);
 
         return self::SUCCESS;
+    }
+
+    private function parseIntInput(InputInterface $input, string $name, ?int $min = null): ?int
+    {
+        $value = $input->getOption($name);
+
+        if (null === $value) {
+            return null;
+        }
+
+        if (!ctype_digit($value)) {
+            throw new \InvalidArgumentException("The '{$name}' option must be an integer number");
+        }
+
+        $value = (int) $value;
+
+        if (null !== $min && $value < $min) {
+            throw new \InvalidArgumentException("The '{$name}' option must be >= {$min}");
+        }
+
+        return $value;
     }
 
 }

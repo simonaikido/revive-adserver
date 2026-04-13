@@ -47,7 +47,7 @@ class Condense
         $this->now = $now ?? new \DateTimeImmutable('now');
     }
 
-    public function start(int $monthly, int $daily, int $batches = 0, bool $dryRun = false): void
+    public function start(?int $daily, ?int $monthly, ?int $batches = null, bool $dryRun = false): void
     {
         $types = [];
 
@@ -55,14 +55,22 @@ class Condense
             ->modify('first day of this month')
             ->setTime(0, 0);
 
-        if ($monthly > 0) {
+        if (null !== $monthly) {
+            if ($monthly++ < 0) {
+                throw new \InvalidArgumentException('Monthly value must be >= 0');
+            }
+
             $types['monthly'] = [
                 'start' => null,
                 'end' => $firstDay->modify("-{$monthly} months"),
             ];
         }
 
-        if ($daily > 0) {
+        if (null !== $daily) {
+            if ($daily++ < 0) {
+                throw new \InvalidArgumentException('Daily value must be >= 0');
+            }
+
             $types['daily'] = [
                 'start' => ($types['monthly']['end'] ?? null)?->modify('+1 month'),
                 'end' => $firstDay->modify("-{$daily} months"),
@@ -79,7 +87,7 @@ class Condense
         }
     }
 
-    private function condense(string $type, ?\DateTimeImmutable $startDate, \DateTimeImmutable $endDate, string $table, int $batches, bool $dryRun): void
+    private function condense(string $type, ?\DateTimeImmutable $startDate, \DateTimeImmutable $endDate, string $table, ?int $batches, bool $dryRun): void
     {
         $startDate ??= $this->findMinDate($table, $endDate);
 
@@ -140,7 +148,7 @@ class Condense
 
             $this->io?->writeln("<info>Condensed {$before} records from {$table} into {$after} {$type} aggregates for {$dtStart->format('Y-m')}</info>");
 
-            if ($batches > 0 && --$batches === 0) {
+            if (null !== $batches && --$batches <= 0) {
                 $this->terminate = true;
                 break;
             }
