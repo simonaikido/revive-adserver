@@ -178,11 +178,19 @@ function OA_setTimeZoneLocal()
 /**
  * Returns the hostname the script is running under.
  *
+ * Checks HTTP_X_FORWARDED_HOST first to support reverse proxies (e.g. Railway),
+ * then falls back to HTTP_HOST and SERVER_NAME.
+ *
  * @return string containing the hostname (with port number stripped).
  */
 function OX_getHostName()
 {
-    if (!empty($_SERVER['HTTP_HOST'])) {
+    if (!empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+        // Use the first entry when the header contains a comma-separated list
+        $forwarded = explode(',', $_SERVER['HTTP_X_FORWARDED_HOST']);
+        $host = explode(':', trim($forwarded[0]));
+        $host = $host[0];
+    } elseif (!empty($_SERVER['HTTP_HOST'])) {
         $host = explode(':', $_SERVER['HTTP_HOST']);
         $host = $host[0];
     } elseif (!empty($_SERVER['SERVER_NAME'])) {
@@ -195,11 +203,18 @@ function OX_getHostName()
 /**
  * Returns the hostname (with port) the script is running under.
  *
+ * Checks HTTP_X_FORWARDED_HOST first to support reverse proxies (e.g. Railway),
+ * then falls back to HTTP_HOST and SERVER_NAME.
+ *
  * @return string containing the hostname with port
  */
 function OX_getHostNameWithPort()
 {
-    if (!empty($_SERVER['HTTP_HOST'])) {
+    if (!empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+        // Use the first entry when the header contains a comma-separated list
+        $forwarded = explode(',', $_SERVER['HTTP_X_FORWARDED_HOST']);
+        $host = trim($forwarded[0]);
+    } elseif (!empty($_SERVER['HTTP_HOST'])) {
         $host = $_SERVER['HTTP_HOST'];
     } elseif (!empty($_SERVER['SERVER_NAME'])) {
         $host = $_SERVER['SERVER_NAME'];
