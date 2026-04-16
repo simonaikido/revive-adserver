@@ -63,9 +63,15 @@ function init()
     global $installing;
     if ((!$installing) && (PHP_SAPI != 'cli')) {
         $scriptName = basename($_SERVER['SCRIPT_NAME']);
+        // Also check the full script path to handle FrankenPHP/Caddy environments
+        // where SCRIPT_NAME may not reflect the actual PHP file being executed
+        $scriptPath = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
+        $isInstallScript = ($scriptName === 'install.php') ||
+                           (substr($scriptPath, -strlen('/install.php')) === '/install.php') ||
+                           $installing;
         // Direct the user to the installation script if not installed
         //if (!$GLOBALS['_MAX']['CONF']['openads']['installed'])
-        if ($scriptName != 'install.php' && PHP_SAPI != 'cli' && OA_INSTALLATION_STATUS !== OA_INSTALLATION_STATUS_INSTALLED) {
+        if (!$isInstallScript && PHP_SAPI != 'cli' && OA_INSTALLATION_STATUS !== OA_INSTALLATION_STATUS_INSTALLED) {
             // Do not redirect for maintenance scripts
             if ($scriptName == 'maintenance.php' || $scriptName == 'maintenance-distributed.php') {
                 exit;
